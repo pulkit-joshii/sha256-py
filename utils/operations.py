@@ -5,56 +5,56 @@ from constants import *
 
 def shift_right(x, n):
     """
-    right shift operation, where x is a w-bit word and n is an integer with 0 ≤ n < w
+     right shift operation, where x is a w-bit word and n is an integer with 0 ≤ n < w
     """
     return (x & 0xffffffff) >> n
 
 
 def rotate_right(x, y):
     """
-    circular right shift operation, where x is a w-bit word and n is an integer with 0 ≤ n < w.
+     circular right shift operation, where x is a w-bit word and n is an integer with 0 ≤ n < w.
     """
     return (((x & 0xffffffff) >> (y & 31)) | (x << (BITS_IN_WORD - (y & 31)))) & 0xffffffff
 
 
 def choose(x, y, z):
     """
-    Ch(x,y,z)=(x & y) ^ (¬x & z)
+     Ch(x,y,z)=(x & y) ^ (¬x & z)
     """
     return z ^ (x & (y ^ z))
 
 
 def majority(x, y, z):
     """
-    Maj(x, y,z) = (x ∧ y) ⊕ (x ∧ z) ⊕ ( y ∧ z)
+     Maj(x, y,z) = (x ∧ y) ⊕ (x ∧ z) ⊕ ( y ∧ z)
     """
     return ((x | y) & z) | (x & y)
 
 
 def sigma0(x):
     """
-    sigma0(x) = right_rotate(x, 2) ^ right_rotate(x, 13) ^ right_rotate(x, 22)
+     sigma0(x) = right_rotate(x, 2) ^ right_rotate(x, 13) ^ right_rotate(x, 22)
     """
     return rotate_right(x, 2) ^ rotate_right(x, 13) ^ rotate_right(x, 22)
 
 
 def sigma1(x):
     """
-    sigma1(x) = right_rotate(x, 6) ^ right_rotate(x, 11) ^ right_rotate(x, 25)
+     sigma1(x) = right_rotate(x, 6) ^ right_rotate(x, 11) ^ right_rotate(x, 25)
     """
     return rotate_right(x, 6) ^ rotate_right(x, 11) ^ rotate_right(x, 25)
 
 
 def gamma0(x):
     """
-    gamma0(x) = right_rotate(x, 7) ^ right_rotate(x, 18) ^ right_shift(x, 3)
+     gamma0(x) = right_rotate(x, 7) ^ right_rotate(x, 18) ^ right_shift(x, 3)
     """
     return rotate_right(x, 7) ^ rotate_right(x, 18) ^ shift_right(x, 3)
 
 
 def gamma1(x):
     """
-    gamma1(x) = right_rotate(x, 17) ^ right_rotate(x, 19) ^ right_shift(x, 10)
+     gamma1(x) = right_rotate(x, 17) ^ right_rotate(x, 19) ^ right_shift(x, 10)
     """
     return rotate_right(x, 17) ^ rotate_right(x, 19) ^ shift_right(x, 10)
 
@@ -151,9 +151,11 @@ def pad_last_block(last_block, total_length_message):
 
 
 def pad_message(message, length=None):
-    # given a message in bytes. Pads the last block according to the docs of
-    # sha256, returns a list of blocks where the last blocks are padded
-    # correctly
+    """
+     given a message in bytes. Pads the last block according to the docs of
+     sha256, returns a list of blocks where the last blocks are padded
+     correctly
+    """
     assert isinstance(message, bytes)
     assert len(message) > 0
 
@@ -177,3 +179,16 @@ def pad_message(message, length=None):
         last_block += bytes([0 for _ in range(0, zeroes_bytes_to_add)])
         assert len(last_block) == 64
         return blocks[:len(blocks) - 1] + [last_block, get_extra_empty_block(length)]
+
+
+def compression_function(previous_hash, new_block):
+    """
+     compression function used in SHA 256
+    """
+    digest = [int(previous_hash[i: i + 8], 16)
+              for i in range(0, len(previous_hash), 8)]
+    assert isinstance(new_block, bytes)
+    assert len(new_block) == BLOCK_SIZE
+
+    new_hash = digest_to_hex(mutate(new_block, digest))
+    return new_hash
